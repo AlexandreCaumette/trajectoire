@@ -1,0 +1,66 @@
+import datetime as dt
+import re
+
+import polars as pl
+import streamlit as st
+
+
+def objectif() -> pl.DataFrame:
+    df_referentiel: pl.DataFrame = st.session_state.df_referentiel
+
+    # Current year
+    year = dt.date.today().year
+    start = dt.date(year, 1, 1)
+    end = dt.date(year, 12, 31)
+
+    # Generate daily and weekly ranges
+    daily_dates = pl.date_range(start, end, "1d", eager=True)
+    weekly_dates = pl.date_range(start, end, "1w", eager=True)
+    monthly_dates = pl.date_range(start, end, "1mo", eager=True)
+    yearly_dates = pl.date_range(start, end, "1y", eager=True)
+
+    # Function to expand based on FREQUENCY
+    def expand_dates(freq: str):
+        match = re.match(r"(\d+)([dw])", freq)
+
+        if not match:
+            return []
+
+        mult, unit = int(match.group(1)), match.group(2)
+
+        if unit == "d":
+            # Repeat each day 'mult' times
+            return [d for d in daily_dates for _ in range(mult)]
+
+        elif unit == "w":
+            # Repeat each week 'mult' times
+            return [d for d in weekly_dates for _ in range(mult)]
+
+        elif unit == "mo":
+            # Repeat each week 'mult' times
+            return [d for d in monthly_dates for _ in range(mult)]
+
+        elif unit == "y":
+            # Repeat each week 'mult' times
+            return [d for d in yearly_dates for _ in range(mult)]
+
+        else:
+            return []
+
+    # Apply expansion
+    df_referentiel = df_referentiel.with_columns(
+        pl.col("Fréquence")
+        .map_elements(expand_dates, return_dtype=pl.List(pl.Date))
+        .alias("Date")
+    )
+
+    # Explode to duplicate rows
+    df_referentiel = df_referentiel.explode("Date")
+
+    df_referentiel = df_referentiel.sort("Date")
+
+    df_referentiel = df_referentiel.with_columns(
+        pl.col("Score").cum_sum().alias("Score cumulé")
+    )
+
+    return df_referentiel
