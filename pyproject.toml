@@ -8,4 +8,5 @@ dependencies = [
     "plotly>=6.5.0",
     "polars>=1.36.1",
     "streamlit>=1.52.1",
+    "supabase>=2.25.1",
 ]

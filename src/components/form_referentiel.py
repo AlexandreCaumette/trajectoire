@@ -3,51 +3,64 @@ import streamlit as st
 
 from src import logger
 from src.components.message import message
-from src.models import models
+from src.data import database
+from src.models.exceptions import CustomException
+
+
+def middleware_contribution(contribution: dict) -> dict:
+    df_referentiel: pl.DataFrame = st.session_state["df_referentiel"]
+
+    if "label" not in contribution:
+        raise CustomException("Le label est absent de la contribution !")
+
+    if df_referentiel.is_empty():
+        return contribution
+
+    if contribution["label"] in df_referentiel["Label"].unique().to_list():
+        raise CustomException("Le label existe déjà dans le référentiel !")
+
+    return contribution
 
 
 def ajouter_nouvelle_contribution(contribution: dict):
     try:
-        row = [
-            contribution.get("label", None),
-            contribution.get("categorie", None),
-            contribution.get("score", None),
-            contribution.get("echeance", None),
-            contribution.get("frequence", None),
-        ]
+        contribution = middleware_contribution(contribution)
 
-        nouvelle_contribution = pl.DataFrame(
-            data=[row],
-            schema=models.SCHEMA_REFERENTIEL,
-        )
-
-        df_referentiel = st.session_state["df_referentiel"]
-
-        st.session_state["df_referentiel"] = pl.concat(
-            [df_referentiel, nouvelle_contribution]
-        )
-
-        logger.info("Nouvelle contribution ajoutée au référentiel.")
+        database.upsert_referentiel(contribution)
 
         st.rerun()
 
         message("La nouvelle contribution a bien été ajoutée !", "success")
 
+    except CustomException as error:
+        logger.error(error)
+
+        message(str(error), "error")
+
     except Exception as error:
         logger.error(error)
 
-        message("Une erreur est survenue et a empêché l'ajout.", "error")
+        raise error
 
 
 def form_referentiel():
+    df_referentiel: pl.DataFrame = st.session_state["df_referentiel"]
+
     label = st.text_input(
         label="🏷️ Saisissez le label de la contribution :",
         placeholder="Séance d'escrime, Massage californien, etc.",
     )
 
-    df_referentiel: pl.DataFrame = st.session_state["df_referentiel"]
+    options_categorie = []
 
-    options_categorie = df_referentiel["Catégorie"].unique().sort().to_list()
+    if not df_referentiel.is_empty():
+        if not df_referentiel.filter(pl.col("Label").eq(label)).is_empty():
+            message(
+                "Ce label d'accomplissement existe déjà, il faut en trouver un autre.",
+                "warning",
+            )
+
+        options_categorie = df_referentiel["Catégorie"].unique().sort().to_list()
 
     default_categories = ["Sport", "Santé", "Relation", "Culture"]
 
