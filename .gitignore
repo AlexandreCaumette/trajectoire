@@ -11,3 +11,6 @@ wheels/
 
 # Les logs de l'application
 *.log
+
+# Les secrets de connexion
+.streamlit/secrets.toml

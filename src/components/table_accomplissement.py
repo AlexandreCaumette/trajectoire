@@ -3,7 +3,6 @@ import streamlit as st
 
 from src import logger
 from src.components.message import message
-from src.models import models
 
 
 def supprimer_accomplissements(rows: list):
@@ -25,13 +24,12 @@ def supprimer_accomplissements(rows: list):
 
 
 def table_accomplissement():
-    if "df_contributions" in st.session_state:
-        df_contributions = st.session_state.df_contributions
+    if "df_contributions" not in st.session_state:
+        message("En attente du premier accomplissement.", "info")
 
-    else:
-        df_contributions = pl.DataFrame(schema=models.SCHEMA_CONTRIBUTIONS)
+        return
 
-        st.session_state["df_contributions"] = df_contributions
+    df_contributions = st.session_state.df_contributions
 
     event = st.dataframe(
         data=df_contributions, selection_mode="multi-row", on_select="rerun"

@@ -3,7 +3,7 @@ from typing import Literal
 import streamlit as st
 
 
-def message(message: str, type: Literal["error", "success", "warning"]):
+def message(message: str, type: Literal["error", "success", "warning", "info"]):
     if type == "error":
         st.error(body=message, icon="🚨")
 
@@ -12,3 +12,6 @@ def message(message: str, type: Literal["error", "success", "warning"]):
 
     elif type == "warning":
         st.warning(body=message, icon="⚠️")
+
+    elif type == "info":
+        st.info(body=message, icon="ℹ️")

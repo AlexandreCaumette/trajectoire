@@ -5,23 +5,14 @@ import streamlit as st
 
 from src import logger
 from src.components.message import message
-from src.models import models
+from src.data import database
 
 
-def accomplir_une_contribution(label: str, categorie: str, score: float, date: dt.date):
+def accomplir_une_contribution(accomplissement: dict):
     try:
-        nouvelle_contribution = pl.DataFrame(
-            data=[[label, categorie, score, date]],
-            schema=models.SCHEMA_CONTRIBUTIONS,
-        )
+        accomplissement["date"] = accomplissement["date"].isoformat()
 
-        df_contributions = st.session_state["df_contributions"]
-
-        st.session_state["df_contributions"] = pl.concat(
-            [df_contributions, nouvelle_contribution]
-        )
-
-        logger.info("Nouvelle contribution accomplie.")
+        database.upsert_accomplissement(accomplissement)
 
         st.rerun()
 
@@ -67,6 +58,15 @@ def form_accomplissement():
         max_value=dt.date.today().replace(month=12, day=31),
     )
 
-    if st.button(label="Enregistrer la contribution", disabled=label is None):
-        with st.spinner(show_time=True, text="Accomplissement de la contribution..."):
-            accomplir_une_contribution(label, categorie, score, date)
+    accomplissement = {
+        "label": label,
+        "categorie": categorie,
+        "score": score,
+        "date": date,
+    }
+
+    st.divider()
+
+    if st.button(label="Ajouter l'accomplissement", disabled=label is None, icon="🏆"):
+        with st.spinner(show_time=True, text="Enregistrement de l'accomplissement..."):
+            accomplir_une_contribution(accomplissement)

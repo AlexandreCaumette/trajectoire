@@ -1,5 +1,6 @@
 import streamlit as st
 
+from src.data import database
 from src.pages.page_accomplissements import main_accomplissement
 from src.pages.page_accueil import main_accueil
 from src.pages.page_referentiel import main_referentiel
@@ -30,16 +31,16 @@ def main():
         page_referentiel,
     ]
 
-    if (
-        "df_referentiel" in st.session_state
-        and not st.session_state.df_referentiel.is_empty()
-    ):
+    if "df_referentiel" not in st.session_state:
+        database.fetch_user_referentiel()
+
+    if "df_contributions" not in st.session_state:
+        database.fetch_user_accomplissements()
+
+    if not st.session_state.df_referentiel.is_empty():
         pages.append(page_accomplissement)
 
-    if (
-        "df_contributions" in st.session_state
-        and not st.session_state.df_contributions.is_empty()
-    ):
+    if not st.session_state.df_contributions.is_empty():
         pages.append(page_trajectoire)
 
     current_page = st.navigation(pages=pages)

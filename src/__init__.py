@@ -32,4 +32,4 @@ def initialiser_logger() -> logging.Logger:
     return logger
 
 
-logger = initialiser_logger()
+logger: logging.Logger = initialiser_logger()
