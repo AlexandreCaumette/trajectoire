@@ -101,9 +101,9 @@ def fetch_user_accomplissements():
                 }
             )
 
-        df = df.with_columns(
-            pl.col("Date").str.strptime(dtype=pl.Date, format="%Y-%m-%d")
-        )
+            df = df.with_columns(
+                pl.col("Date").str.strptime(dtype=pl.Date, format="%Y-%m-%d")
+            )
 
         st.session_state["df_contributions"] = df
 
@@ -199,6 +199,24 @@ def signup_user(email: str, password: str):
         )
 
         logger.debug("Création de compte réussie.")
+
+    except Exception as error:
+        logger.error(error)
+
+        raise error
+
+
+def signout_user():
+    try:
+        logger.debug("Tentative de déconnexion.")
+
+        connection = init_database_connection()
+
+        connection.auth.sign_out()
+
+        st.session_state.clear()
+
+        logger.debug("Déconnexion réussie.")
 
     except Exception as error:
         logger.error(error)
