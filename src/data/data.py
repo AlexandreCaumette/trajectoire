@@ -5,7 +5,7 @@ import polars as pl
 import streamlit as st
 
 
-def objectif() -> pl.DataFrame:
+def objectif(date_debut: dt.date, date_fin: dt.date) -> pl.DataFrame:
     df_referentiel: pl.DataFrame = st.session_state.df_referentiel
 
     # Current year
@@ -58,6 +58,11 @@ def objectif() -> pl.DataFrame:
     df_referentiel = df_referentiel.explode("Date")
 
     df_referentiel = df_referentiel.sort("Date")
+
+    if date_debut is not None and date_fin is not None:
+        df_referentiel = df_referentiel.filter(
+            pl.col("Date").is_between(date_debut, date_fin)
+        )
 
     df_referentiel = df_referentiel.with_columns(
         pl.col("Score").cum_sum().alias("Score cumulé")

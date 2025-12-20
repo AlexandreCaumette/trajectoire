@@ -28,9 +28,9 @@ def ajouter_nouvelle_contribution(contribution: dict):
 
         database.upsert_referentiel(contribution)
 
-        st.rerun()
-
         message("La nouvelle contribution a bien été ajoutée !", "success")
+
+        st.rerun()
 
     except CustomException as error:
         logger.error(error)

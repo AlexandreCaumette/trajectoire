@@ -22,7 +22,8 @@ def main_accueil():
         )
 
         if st.button("Créer un compte"):
-            database.signup_user(email, password)
+            with st.spinner(text="Création du compte...", show_time=True):
+                database.signup_user(email, password)
 
     with tab_signin:
         if database.get_user_id() != "":
@@ -39,7 +40,14 @@ def main_accueil():
             )
 
             if st.button("Se connecter"):
-                database.signin_user(email, password)
+                with st.spinner(text="Connexion...", show_time=True):
+                    database.signin_user(email, password)
+
+                with st.spinner(
+                    text="Récupération de mes informations...", show_time=True
+                ):
+                    database.fetch_user_referentiel()
+                    database.fetch_user_accomplissements()
 
                 page_referentiel = st.Page(
                     page=main_referentiel,
