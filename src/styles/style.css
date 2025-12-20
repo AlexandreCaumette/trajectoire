@@ -1,0 +1,8 @@
+img.stLogo {
+    margin-top: 7rem;
+    height: 10rem;
+}
+
+div[data-testid="stSidebarNav"] {
+    margin-top: 8rem;
+}

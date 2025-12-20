@@ -10,6 +10,16 @@ from src.pages.page_trajectoire import main_trajectoire
 def main():
     st.title("Ma trajectoire annuelle")
 
+    st.html(body="src/styles/style.css")
+
+    st.logo(image="assets/logo.png", size="large")
+
+    page_accueil = st.Page(
+        page=main_accueil, title="Accueil", icon="🏡", default=True, url_path="accueil"
+    )
+    page_referentiel = st.Page(
+        page=main_referentiel, title="Mon référentiel", icon="⚙️", url_path="referentiel"
+    )
     page_accomplissement = st.Page(
         page=main_accomplissement,
         title="Mes accomplissements",
@@ -18,12 +28,6 @@ def main():
     )
     page_trajectoire = st.Page(
         page=main_trajectoire, title="Ma trajectoire", icon="🚀", url_path="trajectoire"
-    )
-    page_accueil = st.Page(
-        page=main_accueil, title="Accueil", icon="🏡", default=True, url_path="accueil"
-    )
-    page_referentiel = st.Page(
-        page=main_referentiel, title="Mon référentiel", icon="⚙️", url_path="referentiel"
     )
 
     pages = [

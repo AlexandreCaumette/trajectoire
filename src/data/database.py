@@ -42,7 +42,7 @@ def init_database_connection() -> Client:
 
 def fetch_user_referentiel():
     try:
-        logger.debug("Extraction du référentiel.")
+        logger.debug("SELECT FROM REFERENTIEL.")
 
         connection = init_database_connection()
 
@@ -122,11 +122,15 @@ def get_user_id() -> str:
 
 def upsert_referentiel(payload: dict):
     try:
-        logger.debug("UPSERT d'un élément dans le référentiel.")
+        logger.info("UPSERT d'un élément dans le référentiel.")
 
         connection = init_database_connection()
 
+        print(payload)
+
         payload["id_user"] = get_user_id()
+
+        print(payload)
 
         connection.table("referentiel").insert(json=payload).execute()
 
@@ -142,7 +146,7 @@ def upsert_referentiel(payload: dict):
 
 def upsert_accomplissement(payload: dict):
     try:
-        logger.debug("UPSERT d'un élément dans les accomplissements.")
+        logger.info("UPSERT d'un élément dans les accomplissements.")
 
         connection = init_database_connection()
 
@@ -217,6 +221,53 @@ def signout_user():
         st.session_state.clear()
 
         logger.debug("Déconnexion réussie.")
+
+    except Exception as error:
+        logger.error(error)
+
+        raise error
+
+
+def delete_referentiel(id_referentiel: int | list[int]):
+    try:
+        logger.info("DELETE FROM REFERENTIEL.")
+
+        connection = init_database_connection()
+
+        if isinstance(id_referentiel, int):
+            id_referentiel = [id_referentiel]
+
+        connection.table("referentiel").delete().in_("id", id_referentiel).execute()
+
+        logger.debug("DELETE SUCCEED.")
+
+        fetch_user_referentiel()
+
+    except Exception as error:
+        logger.error(error)
+
+        raise error
+
+
+def delete_accomplissement(id_accomplissement: int | list[int]):
+    try:
+        logger.info("DELETE FROM ACCOMPLISSEMENTS.")
+
+        connection = init_database_connection()
+
+        if isinstance(id_accomplissement, int):
+            id_accomplissement = [id_accomplissement]
+
+        (
+            connection.table("accomplissements")
+            .delete()
+            .in_("id", id_accomplissement)
+            .execute()
+        )
+
+        logger.debug("DELETE SUCCEED.")
+
+        fetch_user_accomplissements()
 
     except Exception as error:
         logger.error(error)
