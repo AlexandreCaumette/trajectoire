@@ -118,6 +118,14 @@ def form_referentiel():
 
         contribution.update({"frequence": frequence, "echeance": echeance})
 
+    else:
+        message(
+            "La fréquence par défaut associée à cette contribution sera 1 fois par an.",
+            type="info",
+        )
+
+        contribution.update({"frequence": "1y"})
+
     st.divider()
 
     if st.button(label="Ajouter", icon="💾"):

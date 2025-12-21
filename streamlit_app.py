@@ -1,5 +1,6 @@
 import streamlit as st
 
+from src.components.login import main_signout
 from src.data import database
 from src.pages.page_accomplissements import main_accomplissement
 from src.pages.page_accueil import main_accueil
@@ -48,6 +49,9 @@ def main():
         pages.append(page_trajectoire)
 
     current_page = st.navigation(pages=pages)
+
+    with st.sidebar:
+        main_signout()
 
     current_page.run()
 

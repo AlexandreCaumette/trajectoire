@@ -5,7 +5,9 @@ import polars as pl
 import streamlit as st
 
 
-def objectif(date_debut: dt.date, date_fin: dt.date) -> pl.DataFrame:
+def objectif(
+    date_debut: dt.date, date_fin: dt.date, maille: str = "1d"
+) -> pl.DataFrame:
     df_referentiel: pl.DataFrame = st.session_state.df_referentiel
 
     # Current year
@@ -21,7 +23,7 @@ def objectif(date_debut: dt.date, date_fin: dt.date) -> pl.DataFrame:
 
     # Function to expand based on FREQUENCY
     def expand_dates(freq: str):
-        match = re.match(r"(\d+)([dw])", freq)
+        match = re.match(r"(\d+)([dwy]|mo)", freq)
 
         if not match:
             return []
@@ -66,6 +68,14 @@ def objectif(date_debut: dt.date, date_fin: dt.date) -> pl.DataFrame:
 
     df_referentiel = df_referentiel.with_columns(
         pl.col("Score").cum_sum().alias("Score cumulé")
+    )
+
+    df_referentiel = df_referentiel.group_by_dynamic(
+        index_column="Date", every=maille, group_by="Catégorie"
+    ).agg(pl.sum("Score"), pl.sum("Score cumulé"))
+
+    df_referentiel = df_referentiel.with_columns(
+        pl.col("Score cumulé").forward_fill(), pl.col("Score").forward_fill()
     )
 
     return df_referentiel

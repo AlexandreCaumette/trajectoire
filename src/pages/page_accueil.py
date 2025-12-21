@@ -1,59 +1,43 @@
 import streamlit as st
 
+from src.components import login
 from src.data import database
-from src.pages.page_referentiel import main_referentiel
 
 
 def main_accueil():
     st.header("Accueil")
 
-    tabs = ["Me créer un compte", "Me connecter"]
+    col_signup, col_pad, col_signin = st.columns([6, 1, 6], vertical_alignment="center")
 
-    if database.get_user_id() != "":
-        tabs = ["Me créer un compte", "Me déconnecter"]
+    if "login_mode" not in st.session_state:
+        st.session_state["login_mode"] = ""
 
-    tab_signup, tab_signin = st.tabs(tabs)
+    with col_signup:
+        if st.button(
+            "Je veux me créer un compte",
+            icon=":material/account_circle:",
+            type="tertiary",
+        ):
+            st.session_state["login_mode"] = "signup"
 
-    with tab_signup:
-        email = st.text_input(label="Mon email :", key="signup-email")
+    if database.get_user_id() == "":
+        with col_pad:
+            st.text("ou")
 
-        password = st.text_input(
-            label="Mon mot de passe :", type="password", key="signup-password"
-        )
+        with col_signin:
+            if st.button(
+                "Je veux me connecter", icon=":material/login:", type="tertiary"
+            ):
+                st.session_state["login_mode"] = "signin"
 
-        if st.button("Créer un compte"):
-            with st.spinner(text="Création du compte...", show_time=True):
-                database.signup_user(email, password)
+    st.divider()
 
-    with tab_signin:
-        if database.get_user_id() != "":
-            if st.button(label="Me déconnecter"):
-                database.signout_user()
+    if st.session_state["login_mode"] == "signup":
+        st.subheader("Me créer un compte")
 
-                st.rerun()
+        login.main_signup()
 
-        else:
-            email = st.text_input(label="Mon email :", key="signin-email")
+    elif st.session_state["login_mode"] == "signin":
+        st.subheader("Me connecter à mon compte")
 
-            password = st.text_input(
-                label="Mon mot de passe :", type="password", key="signin-password"
-            )
-
-            if st.button("Se connecter"):
-                with st.spinner(text="Connexion...", show_time=True):
-                    database.signin_user(email, password)
-
-                with st.spinner(
-                    text="Récupération de mes informations...", show_time=True
-                ):
-                    database.fetch_user_referentiel()
-                    database.fetch_user_accomplissements()
-
-                page_referentiel = st.Page(
-                    page=main_referentiel,
-                    title="Mon référentiel",
-                    icon="⚙️",
-                    url_path="referentiel",
-                )
-
-                st.switch_page(page=page_referentiel)
+        login.main_signin()
