@@ -1,4 +1,5 @@
 import datetime as dt
+import math
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -32,6 +33,7 @@ def trajectoire_lineaire(
         y=df_accomplissements["Score cumulé"],
         mode="lines",
         name="Ma trajectoire",
+        marker_color="#04E7FF",
     )
 
     df_objectif = data.objectif(date_debut, date_fin, maille)
@@ -41,6 +43,7 @@ def trajectoire_lineaire(
         y=df_objectif["Score cumulé"],
         mode="lines",
         name="Mon objectif",
+        marker_color="#1562BC",
     )
 
     fig = go.Figure()
@@ -48,6 +51,12 @@ def trajectoire_lineaire(
     fig.add_trace(trace_reelle)
 
     fig.add_trace(trace_theorique)
+
+    fig.update_layout(
+        xaxis=dict(title=dict(text="Date")),
+        yaxis=dict(title=dict(text="Score cumulé")),
+        legend=dict(title=dict(text="Avancement")),
+    )
 
     return fig
 
@@ -67,25 +76,75 @@ def trajectoire_radar(date_debut: dt.date, date_fin: dt.date, maille: str) -> go
 
     df = df.sort("Catégorie")
 
-    def value_to_hex(normalized_value):
-        # Red to Green gradient
-        r = int(255 * (1 - normalized_value))
-        g = int(255 * normalized_value)
-        b = 0
-        return f"#{r:02x}{g:02x}{b:02x}"
+    def value_to_hex(normalized_value: float) -> str:
+        if normalized_value <= 0.2:
+            return "#1562BC"
 
-    color = [value_to_hex(ratio) for ratio in df["Ratio"]]
+        if normalized_value <= 0.4:
+            return "#04E7FF"
+
+        if normalized_value <= 0.8:
+            return "#FE8411"
+
+        if normalized_value > 0.8:
+            return "#F85027"
+
+        return "#FFFFFF"
+
+    colors = [value_to_hex(ratio) for ratio in df["Ratio"]]
+
+    def value_to_width(normalized_value: float, n_categorie: int) -> float:
+        # L'ouverture minimale pour une catégorie est 22.5°
+        min_width = math.pi / 8
+
+        # Le ratio de la catégorie permet de gagner entre 0 et 11.225°
+        ratio_width = math.pi / 16 * normalized_value
+
+        total_width = min_width + ratio_width
+
+        max_width = 2 * math.pi / n_categorie
+
+        return min(total_width, max_width)
+
+    n_categorie = df["Catégorie"].n_unique()
+
+    widths = [value_to_width(ratio, n_categorie) for ratio in df["Ratio"]]
 
     fig.add_trace(
         go.Barpolar(
             r=df["Ratio"],
             theta=df["Catégorie"],
-            marker_line_width=1,
-            marker_color=color,
+            width=widths,
+            marker_color=colors,
+            marker_line_color="black",
+            marker_line_width=2,
+            opacity=0.8,
+            # Custom hover template
+            hovertemplate=(
+                "Catégorie : <b>%{theta}</b><br>"
+                + "Accomplissement : <b>%{r:.1%}<b><br>"
+                + "<extra></extra>"  # Removes the trace name from hover
+            ),
         )
     )
 
-    fig.update_layout()
+    # Set dark background
+    fig.update_layout(
+        polar=dict(
+            bgcolor="darkslategray",
+            radialaxis=dict(
+                ticksuffix="%",  # Add % sign to ticks
+                tickvals=[0.2, 0.4, 0.6, 0.8, 1.0],  # Set tick positions
+                ticktext=["20%", "40%", "60%", "80%", "100%"],
+                gridcolor="gray",
+                linewidth=1,
+            ),
+            angularaxis=dict(
+                gridcolor="gray",
+                linewidth=1,
+            ),
+        ),
+    )
 
     return fig
 

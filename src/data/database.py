@@ -130,11 +130,7 @@ def upsert_referentiel(payload: dict):
 
         connection = init_database_connection()
 
-        print(payload)
-
         payload["id_user"] = get_user_id()
-
-        print(payload)
 
         connection.table("referentiel").insert(json=payload).execute()
 
@@ -155,8 +151,6 @@ def upsert_accomplissement(payload: dict):
         connection = init_database_connection()
 
         payload["id_user"] = get_user_id()
-
-        print(payload)
 
         connection.table("accomplissements").insert(json=payload).execute()
 

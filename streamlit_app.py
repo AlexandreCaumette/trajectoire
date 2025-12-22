@@ -14,7 +14,7 @@ def main():
 
     st.html(body="src/styles/style.css")
 
-    st.logo(image="assets/logo.png", size="large")
+    st.logo(image="assets/logo/logo_big.svg", icon_image="assets/logo/logo.svg")
 
     page_accueil = st.Page(
         page=main_accueil, title="Accueil", icon="🏡", default=True, url_path="accueil"
