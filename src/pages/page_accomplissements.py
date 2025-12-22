@@ -2,7 +2,7 @@ import streamlit as st
 
 from src.components import boutons
 from src.components.form_accomplissement import form_accomplissement
-from src.components.table_accomplissement import table_accomplissement
+from src.components.tables import table_accomplissement
 
 
 def main_accomplissement():

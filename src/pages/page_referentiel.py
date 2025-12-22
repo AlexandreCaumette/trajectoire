@@ -4,7 +4,7 @@ from src.components import boutons
 from src.components.form_referentiel import (
     form_referentiel,
 )
-from src.components.table_referentiel import table_referentiel
+from src.components.tables import table_referentiel
 
 
 def main_referentiel():

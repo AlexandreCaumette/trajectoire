@@ -11,6 +11,9 @@ def icon(
         "mail",
         "password",
         "account_circle",
+        "delete",
+        "check_circle",
+        "sports_score",
     ],
 ) -> str:
     return f":material/{type}:"

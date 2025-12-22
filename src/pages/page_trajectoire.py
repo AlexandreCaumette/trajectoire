@@ -25,23 +25,7 @@ def accomplissements(date_debut: dt.date, date_fin: dt.date) -> go.Figure:
 def trajectoire_lineaire(
     date_debut: dt.date, date_fin: dt.date, maille: str
 ) -> go.Figure:
-    df_accomplissements: pl.DataFrame = st.session_state.df_contributions
-
-    df_accomplissements = df_accomplissements.filter(
-        pl.col("Date").is_between(date_debut, date_fin)
-    )
-
-    df_accomplissements = df_accomplissements.sort("Date")
-
-    df_accomplissements = df_accomplissements.with_columns(
-        pl.col("Score").cum_sum().alias("Score cumulé")
-    )
-
-    df_accomplissements = df_accomplissements.sort("Date")
-
-    df_accomplissements = df_accomplissements.group_by_dynamic(
-        index_column="Date", every=maille
-    ).agg(pl.sum("Score"), pl.sum("Score cumulé"))
+    df_accomplissements = data.realise(date_debut, date_fin, maille)
 
     trace_reelle = go.Scatter(
         x=df_accomplissements["Date"],
@@ -68,22 +52,12 @@ def trajectoire_lineaire(
     return fig
 
 
-def trajectoire_radar(date_debut: dt.date, date_fin: dt.date) -> go.Figure:
+def trajectoire_radar(date_debut: dt.date, date_fin: dt.date, maille: str) -> go.Figure:
     fig = go.Figure()
 
-    df_accomplissements: pl.DataFrame = st.session_state.df_contributions
+    df_accomplissements = data.realise(date_debut, date_fin, maille, agg_categorie=True)
 
-    df_accomplissements = df_accomplissements.filter(
-        pl.col("Date").is_between(date_debut, date_fin)
-    )
-
-    df_accomplissements = df_accomplissements.sort("Date")
-
-    df_accomplissements = df_accomplissements.group_by("Catégorie").agg(pl.sum("Score"))
-
-    df_objectif = data.objectif(date_debut, date_fin)
-
-    df_objectif = df_objectif.group_by("Catégorie").agg(pl.sum("Score"))
+    df_objectif = data.objectif(date_debut, date_fin, agg_categorie=True)
 
     df = df_objectif.join(
         df_accomplissements, on="Catégorie", how="left", suffix="_reel"
@@ -93,11 +67,21 @@ def trajectoire_radar(date_debut: dt.date, date_fin: dt.date) -> go.Figure:
 
     df = df.sort("Catégorie")
 
+    def value_to_hex(normalized_value):
+        # Red to Green gradient
+        r = int(255 * (1 - normalized_value))
+        g = int(255 * normalized_value)
+        b = 0
+        return f"#{r:02x}{g:02x}{b:02x}"
+
+    color = [value_to_hex(ratio) for ratio in df["Ratio"]]
+
     fig.add_trace(
-        go.Scatterpolar(
+        go.Barpolar(
             r=df["Ratio"],
             theta=df["Catégorie"],
-            fill="toself",
+            marker_line_width=1,
+            marker_color=color,
         )
     )
 
@@ -150,7 +134,7 @@ def main_trajectoire():
         st.plotly_chart(figure_or_data=fig)
 
     with st.expander("... mais sous de multiples aspects"):
-        fig = trajectoire_radar(date_debut, date_fin)
+        fig = trajectoire_radar(date_debut, date_fin, maille)
 
         st.plotly_chart(figure_or_data=fig)
 

@@ -8,7 +8,7 @@ from src.pages.page_referentiel import main_referentiel
 
 
 def main_signout():
-    if database.get_user_id() == "":
+    if not database.is_logged_in():
         return
 
     if st.button(label="Me déconnecter", icon=icon("logout"), type="primary"):
@@ -21,6 +21,8 @@ def main_signout():
             default=True,
             url_path="accueil",
         )
+
+        st.session_state["login_mode"] = "signin"
 
         st.switch_page(page_accueil)
 
@@ -57,6 +59,8 @@ def main_signin():
         with st.spinner(text="Connexion...", show_time=True):
             database.signin_user(email, password)
 
+        message("La connexion a réussi !", "success")
+
         with st.spinner(text="Récupération de mes informations...", show_time=True):
             database.fetch_user_referentiel()
             database.fetch_user_accomplissements()
@@ -89,6 +93,7 @@ def main_signup():
         icon=icon("password"),
         placeholder="***********",
         value="",
+        help="Le mot de passe doit contenir plus de 16 caractères.",
     )
 
     confirm_password = st.text_input(
@@ -111,6 +116,13 @@ def main_signup():
 
             return
 
+        if len(password) < 16:
+            message(
+                "Le mot de passe doit contenir au moins 16 caractères !", type="warning"
+            )
+
+            return
+
         if password != confirm_password:
             message(
                 "La confirmation du mot de passe n'est pas égale au mot de passe !",
@@ -120,3 +132,5 @@ def main_signup():
 
         with st.spinner(text="Création du compte...", show_time=True):
             database.signup_user(email, password)
+
+        st.session_state["login_mode"] = "signin"

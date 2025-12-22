@@ -5,8 +5,12 @@ import polars as pl
 import streamlit as st
 
 
+@st.cache_data
 def objectif(
-    date_debut: dt.date, date_fin: dt.date, maille: str = "1d"
+    date_debut: dt.date | None = None,
+    date_fin: dt.date | None = None,
+    maille: str = "1d",
+    agg_categorie: bool = False,
 ) -> pl.DataFrame:
     df_referentiel: pl.DataFrame = st.session_state.df_referentiel
 
@@ -66,16 +70,49 @@ def objectif(
             pl.col("Date").is_between(date_debut, date_fin)
         )
 
+    df_referentiel = df_referentiel.group_by_dynamic(
+        index_column="Date", every=maille, group_by="Catégorie"
+    ).agg(pl.sum("Score"))
+
+    df_referentiel = df_referentiel.sort("Date")
+
     df_referentiel = df_referentiel.with_columns(
         pl.col("Score").cum_sum().alias("Score cumulé")
     )
 
-    df_referentiel = df_referentiel.group_by_dynamic(
+    if agg_categorie:
+        df_referentiel = df_referentiel.group_by("Catégorie").agg(
+            pl.col("Score").sum(), pl.col("Score cumulé").last()
+        )
+
+    return df_referentiel
+
+
+@st.cache_data
+def realise(
+    date_debut: dt.date | None = None,
+    date_fin: dt.date | None = None,
+    maille: str = "1d",
+    agg_categorie: bool = False,
+) -> pl.DataFrame:
+    df: pl.DataFrame = st.session_state.df_contributions
+
+    if date_debut is not None and date_fin is not None:
+        df = df.filter(pl.col("Date").is_between(date_debut, date_fin))
+
+    df = df.sort("Date")
+
+    df = df.with_columns(pl.col("Score").cum_sum().alias("Score cumulé"))
+
+    df = df.group_by_dynamic(
         index_column="Date", every=maille, group_by="Catégorie"
     ).agg(pl.sum("Score"), pl.sum("Score cumulé"))
 
-    df_referentiel = df_referentiel.with_columns(
-        pl.col("Score cumulé").forward_fill(), pl.col("Score").forward_fill()
-    )
+    df = df.sort("Date")
 
-    return df_referentiel
+    if agg_categorie:
+        df = df.group_by("Catégorie").agg(
+            pl.col("Score").sum(), pl.col("Score cumulé").last()
+        )
+
+    return df
