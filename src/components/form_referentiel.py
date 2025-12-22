@@ -2,6 +2,7 @@ import polars as pl
 import streamlit as st
 
 from src import logger
+from src.components.icons import icon
 from src.components.message import message
 from src.data import database
 from src.models.exceptions import CustomException
@@ -47,8 +48,10 @@ def form_referentiel():
     df_referentiel: pl.DataFrame = st.session_state["df_referentiel"]
 
     label = st.text_input(
-        label="🏷️ Saisissez le label de la contribution :",
+        label="Saisissez le label de la contribution :",
         placeholder="Séance d'escrime, Massage californien, etc.",
+        icon=icon("label"),
+        help="Le label sera l'identifiant unique de cet élément.",
     )
 
     options_categorie = []
@@ -70,10 +73,15 @@ def form_referentiel():
         label="🗂️ Sélectionner la catégorie de la contribution :",
         options=options_categorie,
         accept_new_options=True,
+        help="Les résultats sont agrégés par catégorie, il faut donc ranger cet accomplissement dans une catégorie.",
     )
 
     score = st.number_input(
-        label="💯 Saisissez le score de la contribution :", min_value=0, step=5
+        label="Saisissez le score de la contribution :",
+        min_value=0,
+        step=5,
+        icon=icon("sports_score"),
+        help="Le score est relatif et permet de comparer 2 accomplissements entre eux : plus un score est élevé plus l'accomplissement a de l'importance dans ma trajectoire.",
     )
 
     contribution = {"score": score, "categorie": categorie, "label": label}
@@ -118,9 +126,17 @@ def form_referentiel():
 
         contribution.update({"frequence": frequence, "echeance": echeance})
 
+    else:
+        message(
+            "La fréquence par défaut associée à cette contribution sera 1 fois par an.",
+            type="info",
+        )
+
+        contribution.update({"frequence": "1y"})
+
     st.divider()
 
-    if st.button(label="Ajouter", icon="💾"):
+    if st.button(label="Ajouter", icon=icon("check_circle"), type="primary"):
         with st.spinner(
             show_time=True, text="Enregistrement de la nouvelle contribution..."
         ):

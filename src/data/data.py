@@ -5,7 +5,13 @@ import polars as pl
 import streamlit as st
 
 
-def objectif(date_debut: dt.date, date_fin: dt.date) -> pl.DataFrame:
+@st.cache_data
+def objectif(
+    date_debut: dt.date | None = None,
+    date_fin: dt.date | None = None,
+    maille: str = "1d",
+    agg_categorie: bool = False,
+) -> pl.DataFrame:
     df_referentiel: pl.DataFrame = st.session_state.df_referentiel
 
     # Current year
@@ -21,7 +27,7 @@ def objectif(date_debut: dt.date, date_fin: dt.date) -> pl.DataFrame:
 
     # Function to expand based on FREQUENCY
     def expand_dates(freq: str):
-        match = re.match(r"(\d+)([dw])", freq)
+        match = re.match(r"(\d+)([dwy]|mo)", freq)
 
         if not match:
             return []
@@ -64,8 +70,49 @@ def objectif(date_debut: dt.date, date_fin: dt.date) -> pl.DataFrame:
             pl.col("Date").is_between(date_debut, date_fin)
         )
 
+    df_referentiel = df_referentiel.group_by_dynamic(
+        index_column="Date", every=maille, group_by="Catégorie"
+    ).agg(pl.sum("Score"))
+
+    df_referentiel = df_referentiel.sort("Date")
+
     df_referentiel = df_referentiel.with_columns(
         pl.col("Score").cum_sum().alias("Score cumulé")
     )
 
+    if agg_categorie:
+        df_referentiel = df_referentiel.group_by("Catégorie").agg(
+            pl.col("Score").sum(), pl.col("Score cumulé").last()
+        )
+
     return df_referentiel
+
+
+@st.cache_data
+def realise(
+    date_debut: dt.date | None = None,
+    date_fin: dt.date | None = None,
+    maille: str = "1d",
+    agg_categorie: bool = False,
+) -> pl.DataFrame:
+    df: pl.DataFrame = st.session_state.df_contributions
+
+    if date_debut is not None and date_fin is not None:
+        df = df.filter(pl.col("Date").is_between(date_debut, date_fin))
+
+    df = df.sort("Date")
+
+    df = df.with_columns(pl.col("Score").cum_sum().alias("Score cumulé"))
+
+    df = df.group_by_dynamic(
+        index_column="Date", every=maille, group_by="Catégorie"
+    ).agg(pl.sum("Score"), pl.sum("Score cumulé"))
+
+    df = df.sort("Date")
+
+    if agg_categorie:
+        df = df.group_by("Catégorie").agg(
+            pl.col("Score").sum(), pl.col("Score cumulé").last()
+        )
+
+    return df

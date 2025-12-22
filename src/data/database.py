@@ -120,6 +120,10 @@ def get_user_id() -> str:
     return st.session_state.user.id
 
 
+def is_logged_in() -> bool:
+    return get_user_id() != ""
+
+
 def upsert_referentiel(payload: dict):
     try:
         logger.info("UPSERT d'un élément dans le référentiel.")

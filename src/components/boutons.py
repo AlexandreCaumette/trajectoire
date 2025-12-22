@@ -5,6 +5,7 @@ import polars as pl
 import streamlit as st
 
 from src import logger
+from src.components.icons import icon
 from src.components.message import message
 from src.data import database
 
@@ -49,7 +50,7 @@ def bouton_telechargement(table: Literal["référentiel", "accomplissements"]):
         data=data,
         file_name=file_name,
         mime="text/csv",
-        icon="⬇️",
+        icon=icon("download"),
     )
 
     logger.info(f"{table} téléchargé.")
@@ -64,7 +65,7 @@ def bouton_actualisation(table: Literal["référentiel", "accomplissements"]):
     elif table == "accomplissements":
         label = f"{label} les {table}"
 
-    if st.button(label=label, icon="🔄", type="secondary"):
+    if st.button(label=label, icon=icon("refresh"), type="secondary"):
         with st.spinner(show_time=True, text="Actualisation..."):
             if table == "référentiel":
                 database.fetch_user_referentiel()
