@@ -228,5 +228,9 @@ def main_form_reset():
             url_path="accueil",
         )
 
-        if st.button(label="Retourner à l'accueil", icon=icon("home")):
+        if st.button(
+            label="Retourner à l'accueil",
+            icon=icon("home"),
+            help="Ce bouton ne marche pas pour l'instant",
+        ):
             st.switch_page(page_accueil)
