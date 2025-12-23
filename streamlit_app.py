@@ -47,8 +47,6 @@ def main_app():
 
     pages = [page_accueil]
 
-    url = st.context.url
-
     if "current_page" not in st.session_state:
         st.session_state["current_page"] = page_accueil.url_path
 
@@ -77,7 +75,7 @@ def main_app():
 def main():
     url = st.context.url
 
-    if url is not None and url.endswith("reset-password"):
+    if url is not None and "reset-password" in url:
         main_reset_password()
 
     else:

@@ -57,24 +57,28 @@ def main_signin():
             return
 
         with st.spinner(text="Connexion...", show_time=True):
-            database.signin_user(email, password)
+            message_reponse = database.signin_user(email, password)
 
-        message("La connexion a réussi !", "success")
+        if message_reponse is None:
+            message("La connexion a réussi !", "success")
 
-        with st.spinner(text="Récupération de mes informations...", show_time=True):
-            database.fetch_user_referentiel()
-            database.fetch_user_accomplissements()
+            with st.spinner(text="Récupération de mes informations...", show_time=True):
+                database.fetch_user_referentiel()
+                database.fetch_user_accomplissements()
 
-        page_referentiel = st.Page(
-            page=main_referentiel,
-            title="Mon référentiel",
-            icon="⚙️",
-            url_path="referentiel",
-        )
+            page_referentiel = st.Page(
+                page=main_referentiel,
+                title="Mon référentiel",
+                icon="⚙️",
+                url_path="referentiel",
+            )
 
-        st.session_state["login_mode"] = ""
+            st.session_state["login_mode"] = ""
 
-        st.switch_page(page=page_referentiel)
+            st.switch_page(page=page_referentiel)
+
+        else:
+            message(message_reponse, "error")
 
     if st.button(
         label="Réinitialiser mon mot de passe",
@@ -108,7 +112,7 @@ def main_signup():
         icon=icon("password"),
         placeholder="***********",
         value="",
-        help="Le mot de passe doit contenir plus de 16 caractères.",
+        help="Le mot de passe doit contenir plus de 14 caractères.",
     )
 
     confirm_password = st.text_input(
@@ -131,9 +135,9 @@ def main_signup():
 
             return
 
-        if len(password) < 16:
+        if len(password) < 14:
             message(
-                "Le mot de passe doit contenir au moins 16 caractères !", type="warning"
+                "Le mot de passe doit contenir au moins 14 caractères !", type="warning"
             )
 
             return
@@ -151,7 +155,7 @@ def main_signup():
         st.session_state["login_mode"] = "signin"
 
 
-def main_reset():
+def main_form_reset():
     email = st.text_input(
         label="Mon email :",
         key="signup-email",
@@ -167,7 +171,7 @@ def main_reset():
         icon=icon("password"),
         placeholder="***********",
         value="",
-        help="Le mot de passe doit contenir plus de 16 caractères.",
+        help="Le mot de passe doit contenir plus de 14 caractères.",
     )
 
     confirm_password = st.text_input(
@@ -192,9 +196,9 @@ def main_reset():
 
             return
 
-        if len(password) < 16:
+        if len(password) < 14:
             message(
-                "Le mot de passe doit contenir au moins 16 caractères !", type="warning"
+                "Le mot de passe doit contenir au moins 14 caractères !", type="warning"
             )
 
             return
@@ -207,7 +211,7 @@ def main_reset():
             return
 
         with st.spinner(text="Réinitialisation...", show_time=True):
-            database.reset_password(password)
+            database.reset_password(password=password)
 
         message(
             "Le mot de passe a été réinitialisé avec succès !",
@@ -215,3 +219,14 @@ def main_reset():
         )
 
         st.session_state["login_mode"] = "signin"
+
+        page_accueil = st.Page(
+            page=main_accueil,
+            title="Accueil",
+            icon="🏡",
+            default=True,
+            url_path="accueil",
+        )
+
+        if st.button(label="Retourner à l'accueil", icon=icon("home")):
+            st.switch_page(page_accueil)
