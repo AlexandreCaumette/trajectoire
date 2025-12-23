@@ -271,3 +271,40 @@ def delete_accomplissement(id_accomplissement: int | list[int]):
         logger.error(error)
 
         raise error
+
+
+def send_reset_email(email: str):
+    try:
+        logger.debug("Envoi du mail de réinitialisation de mot de passe.")
+
+        connection = init_database_connection()
+
+        connection.auth.reset_password_for_email(
+            email,
+            {
+                "redirect_to": "https://ma-trajectoire.streamlit.app/reset-password",
+            },
+        )
+
+        logger.debug("Envoi du mail réussi.")
+
+    except Exception as error:
+        logger.error(error)
+
+        raise error
+
+
+def reset_password(password: str):
+    try:
+        logger.debug("Réinitialisation du mot de passe.")
+
+        connection = init_database_connection()
+
+        connection.auth.update_user({"password": password})
+
+        logger.debug("Réinitialisation réussie.")
+
+    except Exception as error:
+        logger.error(error)
+
+        raise error
