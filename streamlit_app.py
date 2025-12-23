@@ -6,15 +6,28 @@ from src.data import database
 from src.pages.page_accomplissements import main_accomplissement
 from src.pages.page_accueil import main_accueil
 from src.pages.page_referentiel import main_referentiel
+from src.pages.page_reset_password import main_reset_password
 from src.pages.page_trajectoire import main_trajectoire
 
 
-def main():
+def main_app():
     st.title("Ma trajectoire annuelle")
 
     st.html(body="src/styles/style.css")
 
-    st.logo(image="assets/logo.png", size="large")
+    st.logo(image="assets/logo/logo_big.svg", icon_image="assets/logo/logo.svg")
+
+    with st.sidebar:
+        if database.is_logged_in():
+            st.text("Mes indicateurs d'avancement")
+
+            metriques.metrique_annuelle()
+
+            metriques.metrique_a_date()
+
+            st.divider()
+
+            main_signout()
 
     page_accueil = st.Page(
         page=main_accueil, title="Accueil", icon="🏡", default=True, url_path="accueil"
@@ -34,6 +47,9 @@ def main():
 
     pages = [page_accueil]
 
+    if "current_page" not in st.session_state:
+        st.session_state["current_page"] = page_accueil.url_path
+
     if database.is_logged_in():
         if "df_referentiel" not in st.session_state:
             database.fetch_user_referentiel()
@@ -51,19 +67,19 @@ def main():
 
     current_page = st.navigation(pages=pages)
 
-    with st.sidebar:
-        if database.is_logged_in():
-            st.text("Mes indicateurs d'avancement")
-
-            metriques.metrique_annuelle()
-
-            metriques.metrique_a_date()
-
-            st.divider()
-
-            main_signout()
+    st.session_state["current_page"] = current_page.url_path
 
     current_page.run()
+
+
+def main():
+    url = st.context.url
+
+    if url is not None and "reset-password" in url:
+        main_reset_password()
+
+    else:
+        main_app()
 
 
 if __name__ == "__main__":

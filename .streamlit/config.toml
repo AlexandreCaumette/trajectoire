@@ -1,0 +1,10 @@
+[theme.dark]
+
+# Primary accent color.
+primaryColor = "#F85027"
+
+
+[theme.light]
+
+# Primary accent color.
+primaryColor = "#1562BC"

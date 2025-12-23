@@ -14,6 +14,8 @@ def icon(
         "delete",
         "check_circle",
         "sports_score",
+        "reset_settings",
+        "home",
     ],
 ) -> str:
     return f":material/{type}:"

@@ -1,6 +1,7 @@
 import streamlit as st
 
 from src.components import login
+from src.components.icons import icon
 from src.data import database
 
 
@@ -15,7 +16,7 @@ def main_accueil():
     with col_signup:
         if st.button(
             "Je veux me créer un compte",
-            icon=":material/account_circle:",
+            icon=icon("account_circle"),
             type="tertiary",
         ):
             st.session_state["login_mode"] = "signup"
@@ -25,9 +26,7 @@ def main_accueil():
             st.text("ou")
 
         with col_signin:
-            if st.button(
-                "Je veux me connecter", icon=":material/login:", type="tertiary"
-            ):
+            if st.button("Je veux me connecter", icon=icon("login"), type="tertiary"):
                 st.session_state["login_mode"] = "signin"
 
     st.divider()

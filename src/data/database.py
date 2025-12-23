@@ -1,5 +1,6 @@
 import polars as pl
 import streamlit as st
+import supabase
 from supabase import Client, create_client
 
 from src import logger
@@ -130,11 +131,7 @@ def upsert_referentiel(payload: dict):
 
         connection = init_database_connection()
 
-        print(payload)
-
         payload["id_user"] = get_user_id()
-
-        print(payload)
 
         connection.table("referentiel").insert(json=payload).execute()
 
@@ -156,8 +153,6 @@ def upsert_accomplissement(payload: dict):
 
         payload["id_user"] = get_user_id()
 
-        print(payload)
-
         connection.table("accomplissements").insert(json=payload).execute()
 
         logger.debug("INSERT réussi.")
@@ -170,7 +165,7 @@ def upsert_accomplissement(payload: dict):
         raise error
 
 
-def signin_user(email: str, password: str):
+def signin_user(email: str, password: str) -> None | str:
     try:
         logger.debug("Tentative de connexion.")
 
@@ -186,6 +181,11 @@ def signin_user(email: str, password: str):
         st.session_state["user"] = response.user
 
         logger.debug("Connexion réussie.")
+
+    except supabase.AuthApiError as error:
+        logger.error(error)
+
+        return error.message
 
     except Exception as error:
         logger.error(error)
@@ -272,6 +272,52 @@ def delete_accomplissement(id_accomplissement: int | list[int]):
         logger.debug("DELETE SUCCEED.")
 
         fetch_user_accomplissements()
+
+    except Exception as error:
+        logger.error(error)
+
+        raise error
+
+
+def send_reset_email(email: str):
+    try:
+        logger.debug("Envoi du mail de réinitialisation de mot de passe.")
+
+        connection = init_database_connection()
+
+        connection.auth.reset_password_for_email(
+            email,
+            {
+                "redirect_to": st.secrets.supabase_credentials.get(
+                    "RESET_PASSWORD_URL", ""
+                ),
+            },
+        )
+
+        logger.debug("Envoi du mail réussi.")
+
+    except Exception as error:
+        logger.error(error)
+
+        raise error
+
+
+def reset_password(password: str):
+    try:
+        logger.debug("_n\n\nRéinitialisation du mot de passe.")
+
+        access_token = st.query_params.get("access_token", "")
+        refresh_token = st.query_params.get("refresh_token", "")
+
+        connection = init_database_connection()
+
+        connection.auth.set_session(
+            access_token=access_token, refresh_token=refresh_token
+        )
+
+        connection.auth.update_user({"password": password})
+
+        logger.debug("Réinitialisation réussie.")
 
     except Exception as error:
         logger.error(error)
